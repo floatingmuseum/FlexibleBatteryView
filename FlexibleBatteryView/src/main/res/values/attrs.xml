@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="FlexibleBatteryView">
+        <attr name="border_color" format="color" />
+        <attr name="inside_power_color" format="color" />
+        <attr name="inside_background_color" format="color" />
+
+        <attr name="border_width" format="dimension" />
+        <attr name="border_corner_radius" format="dimension" />
+        <attr name="inside_padding" format="dimension" />
+        <attr name="inside_core_radius" format="dimension" />
+        <attr name="head_height" format="dimension" />
+        <attr name="head_width" format="dimension" />
+
+        <attr name="power_level" format="integer" />
+
+        <attr name="core_image" format="reference" />
+    </declare-styleable>
+</resources>

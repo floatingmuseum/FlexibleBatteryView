@@ -1,0 +1,3 @@
+rootProject.name = "FlexibleBattery"
+include ':app'
+include ':FlexibleBatteryView'
