@@ -45,6 +45,9 @@ class FlexibleBatteryView : View {
     private var viewHeight = 0
     private var coreImageScaleType = CORE_IMAGE_SCALE_TYPE_FIT_CENTER
     private var direction = DIRECTION_UP
+    private var text = ""
+    private var textSize = 0F
+    private var textColor = Color.WHITE
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
@@ -83,6 +86,9 @@ class FlexibleBatteryView : View {
             coreImageScaleType =
                 typedArray.getInt(R.styleable.FlexibleBatteryView_core_image_scale_type, CORE_IMAGE_SCALE_TYPE_FIT_CENTER)
             direction =  typedArray.getInt(R.styleable.FlexibleBatteryView_direction, DIRECTION_UP)
+            text =  typedArray.getString(R.styleable.FlexibleBatteryView_text)?: ""
+            textSize =  typedArray.getDimension(R.styleable.FlexibleBatteryView_text_size,0F)
+            textColor =  typedArray.getColor(R.styleable.FlexibleBatteryView_text_color,Color.WHITE)
             level = getLegalPowerLevel(xmlLevel)
             Log.d(TAG, "initAttrs()...direction:$direction")
             Log.d(TAG, "initAttrs()...insidePowerColor:$insidePowerColor")
@@ -149,8 +155,12 @@ class FlexibleBatteryView : View {
             val coreSize = buildCoreRect(finalHeadHeight)
             canvas.drawRoundRect(rect, insideCoreCornerRadius, insideCoreCornerRadius, paint)
             rect.setEmpty()
-            //draw inside core image
-            drawCoreBitmap(it, coreSize[0], coreSize[1], coreSize[2], coreSize[3])
+            if (text.isEmpty()) {
+                //draw inside core image
+                drawCoreBitmap(it, coreSize[0], coreSize[1], coreSize[2], coreSize[3])
+            } else {
+                drawCoreText(canvas)
+            }
 
             //draw battery head
             paint.color = if (borderWidth == 0F || borderColor == Color.TRANSPARENT) {
@@ -351,6 +361,19 @@ class FlexibleBatteryView : View {
         rect.set(left, top, right, bottom)
     }
 
+    private fun drawCoreText(canvas: Canvas) {
+        paint.color = textColor
+        paint.textSize = textSize
+        val measureTextWidth = paint.measureText(text)
+        val top = paint.fontMetrics.top
+        val bottom = paint.fontMetrics.bottom
+        val x = (viewWidth - measureTextWidth) / 2
+        val y = viewHeight / 2 + ((bottom - top) / 2 - bottom)
+        Log.d(TAG, "onDraw()...text:$text...textSize:$textSize")
+        Log.d(TAG, "onDraw()...text:$text...measureTextWidth:$measureTextWidth...top:$top...bottom:$bottom...x:$x...y:$y")
+        canvas.drawText(text, x, y, paint)
+    }
+
     /**
      * keep image scale and zoom up，show it in the center of core
      */
@@ -475,6 +498,16 @@ class FlexibleBatteryView : View {
 
     fun setCoreImage(d: Drawable?) {
         coreImageDrawable = d
+        invalidate()
+    }
+
+    fun setText(newText: String) {
+        text = newText
+        invalidate()
+    }
+
+    fun setTextColor(color: Int) {
+        textColor = color
         invalidate()
     }
 }

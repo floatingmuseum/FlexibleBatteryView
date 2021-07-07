@@ -3,6 +3,7 @@ package com.floatingmuseum.flexiblebattery.demo
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -11,6 +12,7 @@ import com.floatingmuseum.flexiblebattery.demo.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private var isTextUseOn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +26,9 @@ class MainActivity : AppCompatActivity() {
         binding.seekbarLevel.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 binding.fbvBattery.setPowerLevel(p1)
+                if (binding.switchTextUse.isChecked) {
+                    binding.fbvBattery.setText("$p1")
+                }
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -58,6 +63,22 @@ class MainActivity : AppCompatActivity() {
             )
         }
         binding.tvInsideCoreImageNon.setOnClickListener { updateInsideCoreImage(null) }
+        binding.switchTextUse.setOnCheckedChangeListener { _, on ->
+            Log.d("switchTextUseLog", "...on:$on")
+            if (isTextUseOn != on) {
+                isTextUseOn = on
+                if (isTextUseOn) {
+                    val level = binding.fbvBattery.getPowerLevel()
+                    binding.fbvBattery.setText("$level")
+                } else {
+                    binding.fbvBattery.setText("")
+                }
+            }
+        }
+        isTextUseOn = binding.switchTextUse.isEnabled
+        binding.tvTextColorRed.setOnClickListener { updateTextColor("#ffff4444") }
+        binding.tvTextColorBlack.setOnClickListener { updateTextColor("#ff000000") }
+        binding.tvTextColorGreen.setOnClickListener { updateTextColor("#ff669900") }
     }
 
     private fun updateBorderColor(colorString: String) {
@@ -74,5 +95,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateInsideCoreImage(d: Drawable?) {
         binding.fbvBattery.setCoreImage(d)
+    }
+
+    private fun updateTextColor(colorString: String) {
+        binding.fbvBattery.setTextColor(Color.parseColor(colorString))
     }
 }
