@@ -134,7 +134,7 @@ class FlexibleBatteryView : View {
 
             //draw inside background
             //if inside padding is 0 or inside background is transparent，then no background needed
-            if (insidePaddingWidth > 0 && insideBackgroundColor != Color.TRANSPARENT) {
+            if (insidePaddingWidth > 0 || insideBackgroundColor != Color.TRANSPARENT) {
                 paint.color = insideBackgroundColor
                 paint.strokeWidth = 0F
                 paint.style = Paint.Style.FILL_AND_STROKE
