@@ -16,5 +16,9 @@
         <attr name="power_level" format="integer" />
 
         <attr name="core_image" format="reference" />
+        <attr name="core_image_scale_type">
+            <enum name="fitCenter" value="0" />
+            <enum name="fitXY" value="1" />
+        </attr>
     </declare-styleable>
 </resources>

@@ -10,6 +10,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:scaleType="fitCenter"/>-->
+
 
         <com.floatingmuseum.flexiblebatteryview.FlexibleBatteryView
             android:id="@+id/fbv_battery"
@@ -29,6 +34,7 @@
             app:head_height="3dp"
             app:head_width="20dp"
             app:power_level="50"
+            app:core_image_scale_type="fitXY"
             app:core_image="@drawable/flash_50_yellow" />
 
         <TextView

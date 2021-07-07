@@ -15,6 +15,8 @@ class FlexibleBatteryView : View {
 
     companion object {
         private const val TAG = "FlexibleBatteryView"
+        private const val CORE_IMAGE_SCALE_TYPE_FIT_CENTER = 0
+        private const val CORE_IMAGE_SCALE_TYPE_FIT_XY = 1
     }
 
     private var insidePowerColor = Color.WHITE
@@ -36,6 +38,7 @@ class FlexibleBatteryView : View {
     private var lastFinalBitmapDrawStartY = (-1).toFloat()
     private var viewWidth = 0
     private var viewHeight = 0
+    private var coreImageScaleType = CORE_IMAGE_SCALE_TYPE_FIT_CENTER
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
@@ -71,6 +74,8 @@ class FlexibleBatteryView : View {
             headHeight = typedArray.getDimension(R.styleable.FlexibleBatteryView_head_height, 0F)
             coreImageDrawable = typedArray.getDrawable(R.styleable.FlexibleBatteryView_core_image)
             val xmlLevel = typedArray.getInt(R.styleable.FlexibleBatteryView_power_level, 0)
+            coreImageScaleType =
+                typedArray.getInt(R.styleable.FlexibleBatteryView_core_image_scale_type, CORE_IMAGE_SCALE_TYPE_FIT_CENTER)
             level = getLegalPowerLevel(xmlLevel)
             Log.d(TAG, "initAttrs()...insidePowerColor:$insidePowerColor")
             Log.d(TAG, "initAttrs()...insideBackgroundColor:$insideBackgroundColor")
@@ -80,6 +85,7 @@ class FlexibleBatteryView : View {
             Log.d(TAG, "initAttrs()...headWidth:$headWidth")
             Log.d(TAG, "initAttrs()...headHeight:$headHeight")
             Log.d(TAG, "initAttrs()...level:$level")
+            Log.d(TAG, "initAttrs()...coreImageScaleType:$coreImageScaleType")
             typedArray.recycle()
         }
     }
@@ -168,15 +174,8 @@ class FlexibleBatteryView : View {
             Log.d(TAG, "onDraw()...core rect:$rect")
             canvas.drawRoundRect(rect, insideCoreCornerRadius, insideCoreCornerRadius, paint)
 
-            //this will let image scaleStyle to FIT_XY
-//            coreImageDrawable?.toBitmap()?.let { sourceBitmap ->
-//                val bitmapRect = RectF(coreStartX,coreTopY,coreEndX,coreBottomY)
-//                Log.d(TAG, "onDraw()...core bitmapRect:$bitmapRect")
-//                canvas.drawBitmap(sourceBitmap,null,bitmapRect,paint)
-//            }
-
             //draw inside core image
-            drawCoreBitmap(it, coreStartX, coreEndX, coreTopY, coreFullHeight)
+            drawCoreBitmap(it, coreStartX, coreEndX, coreTopY, coreBottomY)
 
             //draw battery head
             paint.color = if (borderWidth == 0F || borderColor == Color.TRANSPARENT) {
@@ -209,7 +208,7 @@ class FlexibleBatteryView : View {
         coreStartX: Float,
         coreEndX: Float,
         coreTopY: Float,
-        coreFullHeight: Float
+        coreBottomY: Float
     ) {
         val currentDrawableHash = coreImageDrawable?.hashCode() ?: -1
         var useOldBitmap = false
@@ -239,19 +238,27 @@ class FlexibleBatteryView : View {
                 val rawHeight = sourceBitmap.height
 
                 val coreFulWidth = coreEndX - coreStartX
+                val coreFullHeight = coreBottomY - coreTopY
 
                 val widthScale = coreFulWidth / rawWidth
                 val heightScale = coreFullHeight / rawHeight
-
-                //choose short side
-                val smallScale = if (widthScale < heightScale) {
-                    widthScale
-                } else {
-                    heightScale
+                var finalBitmapWidth = coreEndX - coreStartX
+                var finalBitmapHeight = coreFullHeight - coreTopY
+                if (coreImageScaleType == CORE_IMAGE_SCALE_TYPE_FIT_CENTER) {
+                    //choose short side
+                    val smallScale = if (widthScale < heightScale) {
+                        widthScale
+                    } else {
+                        heightScale
+                    }
+                    finalBitmapWidth = rawWidth * smallScale
+                    finalBitmapHeight = rawHeight * smallScale
+                } else if (coreImageScaleType == CORE_IMAGE_SCALE_TYPE_FIT_XY) {
+                    //do not need change finalBitmapWidth and finalBitmapHeight for fitXY
                 }
 
-                val finalBitmapWidth = rawWidth * smallScale
-                val finalBitmapHeight = rawHeight * smallScale
+                Log.d(TAG, "drawCoreBitmap()...rawWidth:$rawWidth...rawHeight:$rawHeight")
+                Log.d(TAG, "drawCoreBitmap()...finalBitmapWidth:$finalBitmapWidth...finalBitmapHeight:$finalBitmapHeight")
                 // calc draw position X
                 lastFinalBitmapDrawStartX = coreFulWidth / 2 - finalBitmapWidth / 2 + coreStartX
                 // calc draw position Y
