@@ -15,6 +15,11 @@ class FlexibleBatteryView : View {
 
     companion object {
         private const val TAG = "FlexibleBatteryView"
+
+        private const val DIRECTION_UP = 0
+        private const val DIRECTION_LEFT = 1
+        private const val DIRECTION_RIGHT = 2
+
         private const val CORE_IMAGE_SCALE_TYPE_FIT_CENTER = 0
         private const val CORE_IMAGE_SCALE_TYPE_FIT_XY = 1
     }
@@ -39,6 +44,7 @@ class FlexibleBatteryView : View {
     private var viewWidth = 0
     private var viewHeight = 0
     private var coreImageScaleType = CORE_IMAGE_SCALE_TYPE_FIT_CENTER
+    private var direction = DIRECTION_UP
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
@@ -76,7 +82,9 @@ class FlexibleBatteryView : View {
             val xmlLevel = typedArray.getInt(R.styleable.FlexibleBatteryView_power_level, 0)
             coreImageScaleType =
                 typedArray.getInt(R.styleable.FlexibleBatteryView_core_image_scale_type, CORE_IMAGE_SCALE_TYPE_FIT_CENTER)
+            direction =  typedArray.getInt(R.styleable.FlexibleBatteryView_direction, DIRECTION_UP)
             level = getLegalPowerLevel(xmlLevel)
+            Log.d(TAG, "initAttrs()...direction:$direction")
             Log.d(TAG, "initAttrs()...insidePowerColor:$insidePowerColor")
             Log.d(TAG, "initAttrs()...insideBackgroundColor:$insideBackgroundColor")
             Log.d(TAG, "initAttrs()...borderColor:$borderColor")
@@ -111,26 +119,13 @@ class FlexibleBatteryView : View {
             paint.color = borderColor
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = borderWidth
-            val headHeight = when {
-                //use specified head height
-                headHeight > 0F -> headHeight
-                //use border width as head height
-                borderWidth > 0 -> borderWidth
-                //use 5% of whole battery height
-                else -> (viewHeight * 0.05).toFloat()
-            }
-            Log.d(TAG, "onDraw()...headHeight:$headHeight")
+            val finalHeadHeight = calcHeadHeight()
+            Log.d(TAG, "onDraw()...headHeight:$finalHeadHeight")
 
             //if border width more than 0，than paint position should move some distance
             val offsetBorderWidth = borderWidth / 2
 
-            rect.set(
-                offsetBorderWidth,
-                headHeight + offsetBorderWidth,
-                viewWidth.toFloat() - offsetBorderWidth,
-                viewHeight.toFloat() - offsetBorderWidth
-            )
-            Log.d(TAG, "onDraw()...border rect:$rect")
+            buildBorderRect(offsetBorderWidth, finalHeadHeight)
             canvas.drawRoundRect(rect, borderCornerRadius, borderCornerRadius, paint)
             rect.setEmpty()
 
@@ -143,39 +138,19 @@ class FlexibleBatteryView : View {
                 paint.color = insideBackgroundColor
                 paint.strokeWidth = 0F
                 paint.style = Paint.Style.FILL_AND_STROKE
-                rect.set(
-                    borderWidth,
-                    headHeight + borderWidth,
-                    viewWidth.toFloat() - borderWidth,
-                    viewHeight.toFloat() - borderWidth
-                )
-                Log.d(TAG, "onDraw()...background rect:$rect")
+                buildBackgroundRect(finalHeadHeight)
                 canvas.drawRoundRect(rect, borderCornerRadius, borderCornerRadius, paint)
                 rect.setEmpty()
             }
 
             //draw battery core
             paint.color = insidePowerColor
-            val coreTopY = headHeight + borderWidth + insidePaddingWidth
-            val coreBottomY = viewHeight.toFloat() - borderWidth - insidePaddingWidth
-            //whole battery height
-            val coreFullHeight = coreBottomY - coreTopY
-            //unreached battery height
-            val unreachedHeight = (100 - level).toFloat() / 100 * coreFullHeight
-            val coreStartX = borderWidth + insidePaddingWidth
-            val coreEndX = viewWidth.toFloat() - borderWidth - insidePaddingWidth
-            val coreStartY = coreTopY + unreachedHeight
-            rect.set(
-                coreStartX,
-                coreStartY,
-                coreEndX,
-                coreBottomY
-            )
-            Log.d(TAG, "onDraw()...core rect:$rect")
-            canvas.drawRoundRect(rect, insideCoreCornerRadius, insideCoreCornerRadius, paint)
 
+            val coreSize = buildCoreRect(finalHeadHeight)
+            canvas.drawRoundRect(rect, insideCoreCornerRadius, insideCoreCornerRadius, paint)
+            rect.setEmpty()
             //draw inside core image
-            drawCoreBitmap(it, coreStartX, coreEndX, coreTopY, coreBottomY)
+            drawCoreBitmap(it, coreSize[0], coreSize[1], coreSize[2], coreSize[3])
 
             //draw battery head
             paint.color = if (borderWidth == 0F || borderColor == Color.TRANSPARENT) {
@@ -183,21 +158,197 @@ class FlexibleBatteryView : View {
             } else {
                 borderColor
             }
-            val finalHeadWidth: Float = if (headWidth > 0F && headWidth <= viewWidth) {
-                headWidth
-            }
-            //default head width is 50% of whole battery width
-            else {
-                (viewWidth / 2).toFloat()
-            }
-            Log.d(TAG, "onDraw()...finalHeadWidth:$finalHeadWidth")
-            val headLeft = (viewWidth - finalHeadWidth) / 2
-            val headRight = headLeft + finalHeadWidth
-            rect.set(headLeft, 0F, headRight, headHeight)
-            Log.d(TAG, "onDraw()...head rect:$rect")
+            buildHeadRect(finalHeadHeight)
             canvas.drawRect(rect, paint)
             rect.setEmpty()
         }
+    }
+
+    private fun calcHeadHeight(): Float {
+        return when {
+            //use specified head height
+            headHeight > 0F -> headHeight
+            //use border width as head height
+            borderWidth > 0 -> borderWidth
+            //use 5% of whole battery height
+            direction == DIRECTION_UP -> (viewHeight * 0.05).toFloat()
+            //use 5% of whole battery width
+            direction == DIRECTION_LEFT  -> (viewWidth * 0.05).toFloat()
+            direction == DIRECTION_RIGHT -> (viewWidth * 0.05).toFloat()
+            else -> 0F
+        }
+    }
+
+    private fun buildBorderRect(offsetBorderWidth: Float, headHeight: Float) {
+        var left = 0F
+        var top = 0F
+        var right = 0F
+        var bottom = 0F
+        when (direction) {
+            DIRECTION_UP -> {
+                left = offsetBorderWidth
+                top = headHeight + offsetBorderWidth
+                right = viewWidth.toFloat() - offsetBorderWidth
+                bottom = viewHeight.toFloat() - offsetBorderWidth
+            }
+            DIRECTION_LEFT -> {
+                left = headHeight + offsetBorderWidth
+                top = offsetBorderWidth
+                right = viewWidth.toFloat() - offsetBorderWidth
+                bottom = viewHeight.toFloat() - offsetBorderWidth
+            }
+            DIRECTION_RIGHT -> {
+                left = offsetBorderWidth
+                top = offsetBorderWidth
+                right = viewWidth.toFloat() - headHeight - offsetBorderWidth
+                bottom = viewHeight.toFloat() - offsetBorderWidth
+            }
+        }
+        rect.set(left, top, right, bottom)
+        Log.d(TAG, "buildBorderRect()...rect:$rect")
+    }
+
+    private fun buildBackgroundRect(headHeight: Float) {
+        var left = 0F
+        var top = 0F
+        var right = 0F
+        var bottom = 0F
+        when (direction) {
+            DIRECTION_UP -> {
+                left = borderWidth
+                top = headHeight + borderWidth
+                right = viewWidth.toFloat() - borderWidth
+                bottom = viewHeight.toFloat() - borderWidth
+            }
+            DIRECTION_LEFT -> {
+                left = headHeight + borderWidth
+                top = borderWidth
+                right = viewWidth.toFloat() - borderWidth
+                bottom = viewHeight.toFloat() - borderWidth
+            }
+            DIRECTION_RIGHT -> {
+                left = borderWidth
+                top = borderWidth
+                right = viewWidth.toFloat() - headHeight - borderWidth
+                bottom = viewHeight.toFloat() - borderWidth
+            }
+        }
+        rect.set(left, top, right, bottom)
+        Log.d(TAG, "buildBackgroundRect()...rect:$rect")
+    }
+
+    private fun buildCoreRect(headHeight: Float) : Array<Float> {
+        Log.d(TAG, "buildCoreRect()...direction:$direction")
+        var left = 0F
+        var top = 0F
+        var right = 0F
+        var bottom = 0F
+        var coreLeftX = 0F
+        var coreTopY = 0F
+        var coreRightX = 0F
+        var coreBottomY = 0F
+        when (direction) {
+            DIRECTION_UP -> {
+                 coreTopY = headHeight + borderWidth + insidePaddingWidth
+                 coreBottomY = viewHeight.toFloat() - borderWidth - insidePaddingWidth
+                //whole battery length
+                val coreFullLength = coreBottomY - coreTopY
+                //unreached battery length
+                val unreachedLength = (100 - level).toFloat() / 100 * coreFullLength
+                 coreLeftX = borderWidth + insidePaddingWidth
+                coreRightX = viewWidth.toFloat() - borderWidth - insidePaddingWidth
+                val coreStartDrawY = coreTopY + unreachedLength
+                left = coreLeftX
+                top = coreStartDrawY
+                right = coreRightX
+                bottom = coreBottomY
+            }
+            DIRECTION_LEFT -> {
+                coreTopY =  borderWidth + insidePaddingWidth
+                coreBottomY = viewHeight.toFloat() - borderWidth - insidePaddingWidth
+                coreLeftX = headHeight + borderWidth + insidePaddingWidth
+                coreRightX = viewWidth.toFloat() - borderWidth - insidePaddingWidth
+                //whole battery length
+                val coreFullLength = coreRightX - coreLeftX
+                //unreached battery length
+                val unreachedLength = (100 - level).toFloat() / 100 * coreFullLength
+                val coreStartDrawX = coreLeftX + unreachedLength
+
+                left = coreStartDrawX
+                top = coreTopY
+                right = coreRightX
+                bottom = coreBottomY
+            }
+            DIRECTION_RIGHT -> {
+                coreTopY =  borderWidth + insidePaddingWidth
+                coreBottomY = viewHeight.toFloat() - borderWidth - insidePaddingWidth
+                coreLeftX = borderWidth + insidePaddingWidth
+                coreRightX = viewWidth.toFloat() - headHeight - borderWidth - insidePaddingWidth
+                //whole battery length
+                val coreFullLength = coreRightX - coreLeftX
+                //unreached battery length
+                val unreachedLength = (100 - level).toFloat() / 100 * coreFullLength
+                val coreEndDrawX = coreFullLength - unreachedLength + coreLeftX
+
+                left = coreLeftX
+                top = coreTopY
+                right = coreEndDrawX
+                bottom = coreBottomY
+            }
+        }
+        rect.set(left, top, right, bottom)
+        Log.d(TAG, "buildCoreRect()...rect:$rect")
+        Log.d(TAG, "buildCoreRect()...coreLeftX:$coreLeftX...coreTopY:$coreTopY...coreRightX:$coreRightX...coreBottomY:$coreBottomY")
+        return arrayOf(coreLeftX, coreTopY, coreRightX, coreBottomY)
+    }
+
+    private fun buildHeadRect(finalHeadHeight: Float) {
+        var finalHeadWidth= 0F
+        when (direction) {
+            DIRECTION_UP -> {
+                finalHeadWidth = if (headWidth > 0F && headWidth <= viewWidth) {
+                    headWidth
+                }
+                //default head width is 50% of whole battery width
+                else {
+                    (viewWidth / 2).toFloat()
+                }
+            }
+            DIRECTION_LEFT, DIRECTION_RIGHT -> {
+                finalHeadWidth = if (headWidth > 0F && headWidth <= viewHeight) {
+                    headWidth
+                }
+                //default head width is 50% of whole battery width
+                else {
+                    (viewHeight / 2).toFloat()
+                }
+            }
+        }
+        Log.d(TAG, "buildHeadRect()...finalHeadWidth:$finalHeadWidth")
+        var left = 0F
+        var top = 0F
+        var right = 0F
+        var bottom = 0F
+        when (direction) {
+            DIRECTION_UP -> {
+                left = (viewWidth - finalHeadWidth) / 2
+                right = left + finalHeadWidth
+                bottom = finalHeadHeight
+            }
+            DIRECTION_LEFT -> {
+                top = (viewHeight - finalHeadWidth) / 2
+                right = finalHeadHeight
+                bottom = top + finalHeadWidth
+            }
+            DIRECTION_RIGHT -> {
+                top = (viewHeight - finalHeadWidth) / 2
+                left = viewWidth - finalHeadHeight
+                right = viewWidth.toFloat()
+                bottom = top + finalHeadWidth
+            }
+        }
+        Log.d(TAG, "buildHeadRect()...rect:$rect")
+        rect.set(left, top, right, bottom)
     }
 
     /**
@@ -206,8 +357,8 @@ class FlexibleBatteryView : View {
     private fun drawCoreBitmap(
         canvas: Canvas,
         coreStartX: Float,
-        coreEndX: Float,
         coreTopY: Float,
+        coreEndX: Float,
         coreBottomY: Float
     ) {
         val currentDrawableHash = coreImageDrawable?.hashCode() ?: -1

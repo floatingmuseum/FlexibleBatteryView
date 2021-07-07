@@ -2,6 +2,12 @@
 <resources>
 
     <declare-styleable name="FlexibleBatteryView">
+        <attr name="direction">
+            <enum name="up" value="0" />
+            <enum name="left" value="1" />
+            <enum name="right" value="2" />
+        </attr>
+
         <attr name="border_color" format="color" />
         <attr name="inside_power_color" format="color" />
         <attr name="inside_background_color" format="color" />

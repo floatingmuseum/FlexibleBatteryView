@@ -35,7 +35,8 @@
             app:head_width="20dp"
             app:power_level="50"
             app:core_image_scale_type="fitXY"
-            app:core_image="@drawable/flash_50_yellow" />
+            app:core_image="@drawable/flash_50_yellow"
+            app:direction="up"/>
 
         <TextView
             android:id="@+id/tv_battery_level"
