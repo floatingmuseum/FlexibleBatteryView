@@ -159,7 +159,7 @@ class FlexibleBatteryView : View {
                 //draw inside core image
                 drawCoreBitmap(it, coreSize[0], coreSize[1], coreSize[2], coreSize[3])
             } else {
-                drawCoreText(canvas)
+                drawCoreText(canvas, headHeight)
             }
 
             //draw battery head
@@ -361,16 +361,26 @@ class FlexibleBatteryView : View {
         rect.set(left, top, right, bottom)
     }
 
-    private fun drawCoreText(canvas: Canvas) {
+    private fun drawCoreText(canvas: Canvas, headHeight: Float) {
         paint.color = textColor
         paint.textSize = textSize
+
+        var offsetX1 = 0F
+        var offsetX2 = 0F
+        var offsetY = 0F
+
+        when (direction) {
+            DIRECTION_UP -> offsetY = headHeight
+            DIRECTION_LEFT -> offsetX2 = headHeight
+            DIRECTION_RIGHT -> offsetX1 = headHeight
+        }
         val measureTextWidth = paint.measureText(text)
-        val top = paint.fontMetrics.top
-        val bottom = paint.fontMetrics.bottom
-        val x = (viewWidth - measureTextWidth) / 2
-        val y = viewHeight / 2 + ((bottom - top) / 2 - bottom)
-        Log.d(TAG, "onDraw()...text:$text...textSize:$textSize")
-        Log.d(TAG, "onDraw()...text:$text...measureTextWidth:$measureTextWidth...top:$top...bottom:$bottom...x:$x...y:$y")
+        val fontMetrics = paint.fontMetrics
+        val top = fontMetrics.top
+        val bottom = fontMetrics.bottom
+        val x = (viewWidth - offsetX1 - measureTextWidth) / 2 + offsetX2
+        val y = (viewHeight - offsetY) / 2 + ((bottom - top) / 2 - bottom) + offsetY
+        Log.d(TAG, "drawCoreText()...text:$text...measureTextWidth:$measureTextWidth...x:$x...y:$y")
         canvas.drawText(text, x, y, paint)
     }
 
