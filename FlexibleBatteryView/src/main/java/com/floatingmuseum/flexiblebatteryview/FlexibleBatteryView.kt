@@ -16,12 +16,12 @@ class FlexibleBatteryView : View {
     companion object {
         private const val TAG = "FlexibleBatteryView"
 
-        private const val DIRECTION_UP = 0
-        private const val DIRECTION_LEFT = 1
-        private const val DIRECTION_RIGHT = 2
+        const val DIRECTION_UP = 0
+        const val DIRECTION_LEFT = 1
+        const val DIRECTION_RIGHT = 2
 
-        private const val CORE_IMAGE_SCALE_TYPE_FIT_CENTER = 0
-        private const val CORE_IMAGE_SCALE_TYPE_FIT_XY = 1
+        const val CORE_IMAGE_SCALE_TYPE_FIT_CENTER = 0
+        const val CORE_IMAGE_SCALE_TYPE_FIT_XY = 1
     }
 
     private var insidePowerColor = Color.WHITE
@@ -518,6 +518,25 @@ class FlexibleBatteryView : View {
 
     fun setTextColor(color: Int) {
         textColor = color
+        invalidate()
+    }
+
+    fun setBatteryConfig(config: FlexibleBatteryConfig) {
+        config.level?.let { level = it }
+        config.borderColor?.let { borderColor = it }
+        config.borderWidth?.let { borderWidth = it }
+        config.borderCornerRadius?.let { borderCornerRadius = it }
+        config.insideBackgroundColor?.let { insideBackgroundColor = it }
+        config.insidePaddingWidth?.let { insidePaddingWidth = it }
+        config.insideCoreColor?.let { insidePowerColor = it }
+        config.insideCoreCornerRadius?.let { insideCoreCornerRadius = it }
+        config.headHeight?.let { headHeight = it }
+        config.headWidth?.let { headWidth = it }
+        config.direction?.let { direction = it }
+        config.coreImageScaleType?.let { coreImageScaleType = it }
+        config.text?.let { text = it }
+        config.textColor?.let { textColor = it }
+        config.textSize?.let { textSize = it }
         invalidate()
     }
 }

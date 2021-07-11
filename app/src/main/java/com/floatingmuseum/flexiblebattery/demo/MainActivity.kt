@@ -8,8 +8,14 @@ import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.floatingmuseum.flexiblebattery.demo.databinding.ActivityMainBinding
+import com.floatingmuseum.flexiblebatteryview.FlexibleBatteryConfig
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val PLAN_A = 0
+        private const val PLAN_B = 1
+    }
 
     private lateinit var binding: ActivityMainBinding
     private var isTextUseOn = false
@@ -79,6 +85,8 @@ class MainActivity : AppCompatActivity() {
         binding.tvTextColorRed.setOnClickListener { updateTextColor("#ffff4444") }
         binding.tvTextColorBlack.setOnClickListener { updateTextColor("#ff000000") }
         binding.tvTextColorGreen.setOnClickListener { updateTextColor("#ff669900") }
+        binding.tvModifyMultipleAttrPlanA.setOnClickListener { updateMultipleAttr(PLAN_A) }
+        binding.tvModifyMultipleAttrPlanB.setOnClickListener { updateMultipleAttr(PLAN_B) }
     }
 
     private fun updateBorderColor(colorString: String) {
@@ -99,5 +107,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTextColor(colorString: String) {
         binding.fbvBattery.setTextColor(Color.parseColor(colorString))
+    }
+
+    private fun updateMultipleAttr(plan: Int) {
+        //you can't modify the core image with FlexibleBatteryConfig
+        when (plan) {
+            PLAN_A -> {
+                binding.fbvBattery.setBatteryConfig(
+                    FlexibleBatteryConfig(
+                        level = 30,
+                        borderColor = Color.MAGENTA,
+                        insideCoreColor = Color.DKGRAY,
+                        insidePaddingWidth = 10F
+                    )
+                )
+            }
+            PLAN_B -> {
+                binding.fbvBattery.setBatteryConfig(
+                    FlexibleBatteryConfig(
+                        level = 90,
+                        borderWidth = 4F,
+                        borderCornerRadius = 10F,
+                        insideCoreColor = Color.YELLOW,
+                        insidePaddingWidth = 2F,
+                        textColor = Color.WHITE,
+                        textSize = 20F
+                    )
+                )
+            }
+        }
     }
 }
