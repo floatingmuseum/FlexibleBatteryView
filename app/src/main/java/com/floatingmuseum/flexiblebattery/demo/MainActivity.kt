@@ -85,8 +85,8 @@ class MainActivity : AppCompatActivity() {
         binding.tvTextColorRed.setOnClickListener { updateTextColor("#ffff4444") }
         binding.tvTextColorBlack.setOnClickListener { updateTextColor("#ff000000") }
         binding.tvTextColorGreen.setOnClickListener { updateTextColor("#ff669900") }
-        binding.tvModifyMultipleAttrPlanA.setOnClickListener { updateMultipleAttr(PLAN_A) }
-        binding.tvModifyMultipleAttrPlanB.setOnClickListener { updateMultipleAttr(PLAN_B) }
+        binding.tvPlanA.setOnClickListener { updateMultipleAttr(PLAN_A) }
+        binding.tvPlanB.setOnClickListener { updateMultipleAttr(PLAN_B) }
     }
 
     private fun updateBorderColor(colorString: String) {
