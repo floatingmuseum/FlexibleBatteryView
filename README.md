@@ -1,4 +1,4 @@
-#FlexibleBatteryView
+# FlexibleBatteryView
 provide multiple attributes to customize battery view
 ***
 ```xml
@@ -28,7 +28,7 @@ provide multiple attributes to customize battery view
             app:text_color="@android:color/holo_purple" />
 ```
 ***
-###Api
+### Api
 |  method   | effect  |
 |  ----  | ----  |
 | setPowerLevel(powerLevel: Int)  | set battery level,must between 0 to 100 |
@@ -60,7 +60,7 @@ data class FlexibleBatteryConfig(
 )
 ```
 ***
-###Implementation
+### Implementation
 project build.gradle
 ```java
 allprojects {
